@@ -1,0 +1,68 @@
+{
+  "variables": {
+    "vpc_id": "",
+    "subnet_id": "",
+    "region": "",
+    "access_key": "",
+    "source_ami_linux": "",
+    "source_ami_windows": "",
+    "secret_key": ""
+  },
+  "builders": [
+    {
+      "vpc_id": "{{user `vpc_id`}}",
+      "subnet_id": "{{user `subnet_id`}}",
+      "type": "amazon-ebs",
+      "access_key": "{{user `access_key`}}",
+      "secret_key": "{{user `secret_key`}}",
+      "region": "{{user `region`}}",
+      "source_ami": "{{user `source_ami_linux`}}",
+      "instance_type": "m3.medium",
+      "ssh_username": "ubuntu",
+      "ssh_timeout": "10m",
+      "ami_name": "docker_{{ timestamp | clean_ami_name}}",
+      "ami_description": "Docker base image",
+      "tags": {
+        "Os": "linux",
+        "Availability": "private",
+        "Name": "docker",
+        "Puppet_role": "docker",
+        "Instancetype": "c3.xlarge"
+      },
+      "temporary_key_pair_name": "packer"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline": [
+        "sudo apt-get update; sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold'",
+        "sudo echo debconf debconf/frontend select Noninteractive | sudo debconf-set-selections"
+      ]
+    },
+    {
+      "type": "shell",
+      "script": "linux_scripts/install_puppet.sh"
+    },
+    {
+      "type": "shell",
+      "script": "linux_scripts/install_newrelic.sh"
+    },
+    {
+      "type": "shell",
+      "script": "linux_scripts/install_awscli.sh"
+    },
+    {
+      "type": "shell",
+      "script": "linux_scripts/change_sysctl.sh"
+    },
+    {
+      "type": "shell",
+      "script": "linux_scripts/install_aws_agent.sh"
+    },
+    {
+      "type": "shell",
+      "script": "linux_scripts/install_docker.sh"
+    }
+  ]
+}

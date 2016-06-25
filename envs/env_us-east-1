@@ -1,0 +1,9 @@
+{
+"source_ami_linux": "",
+"source_ami_windows": "",
+"vpc_id":"",
+"subnet_id":"",
+"region":"",
+"access_key":"",
+"secret_key":""
+}

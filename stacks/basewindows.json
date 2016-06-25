@@ -1,0 +1,75 @@
+{
+  "variables": {
+    "vpc_id": "",
+    "subnet_id": "",
+    "region": "",
+    "access_key": "",
+    "source_ami_linux": "",
+    "source_ami_windows": "",
+    "secret_key": ""
+  },
+  "builders": [
+    {
+      "vpc_id": "{{user `vpc_id`}}",
+      "subnet_id": "{{user `subnet_id`}}",
+      "type": "amazon-windows-ebs",
+      "access_key": "{{user `access_key`}}",
+      "secret_key": "{{user `secret_key`}}",
+      "region": "{{user `region`}}",
+      "source_ami": "{{user `source_ami_windows`}}",
+      "instance_type": "c3.large",
+      "ami_name": "basewindows_{{ timestamp | clean_ami_name}}",
+      "associate_public_ip_address": true,
+      "user_data_file": "./windows_scripts/ec2-user-data.ps1",
+      "winrm_username": "",
+      "winrm_password": "",
+      "winrm_wait_timeout": "20m",
+      "winrm_port": 5985,
+      "ami_description": "Base windows image",
+      "tags": {
+        "Os": "windows",
+        "Availability": "public",
+        "Name": "basewindows",
+        "Puppet_role": "basewindows",
+        "Instancetype": "m3.xlarge"
+      }
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "./windows_installer/",
+      "destination": "c:/windows_installer"
+    },
+    {
+      "type": "powershell",
+      "elevated_user": "",
+      "elevated_password": "",
+      "valid_exit_codes": [ 0,259 ],
+      "scripts": [
+        "./windows_scripts/Install-LMIWindowsUpdates.ps1"
+      ]
+    },
+    {
+      "type": "powershell",
+      "elevated_user": "",
+      "elevated_password": "",
+      "pause_before": "5m",
+      "scripts": [
+        "./windows_scripts/Disable-LMIWindowsUpdates.ps1",
+        "./windows_scripts/Install-LMIHotfixKB2842230.ps1",
+        "./windows_scripts/Install-LMIPuppet.ps1",
+        "./windows_scripts/Disable-LMINetbios.ps1",
+        "./windows_scripts/Set-LMIWindowsTools.ps1",
+        "./windows_scripts/Install-LMINewrelic.ps1"
+      ]
+    },
+    {
+      "type":"powershell",
+      "scripts": [
+        "./windows_scripts/Set-LMIEC2.ps1",
+        "./windows_scripts/Set-LMIBundle.ps1"
+      ]
+    }
+  ]
+}
